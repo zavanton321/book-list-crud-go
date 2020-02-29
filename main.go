@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 type Book struct {
@@ -21,10 +22,10 @@ func main() {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/books", getBooks).Methods("GET")
-	router.HandleFunc("/book/{id}", getBook).Methods("GET")
+	router.HandleFunc("/books/{id}", getBook).Methods("GET")
 	router.HandleFunc("/books", addBook).Methods("POST")
 	router.HandleFunc("/books", updateBook).Methods("PUT")
-	router.HandleFunc("/book/{id}", removeBook).Methods("DELETE")
+	router.HandleFunc("/books/{id}", removeBook).Methods("DELETE")
 
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
@@ -35,10 +36,33 @@ func getBooks(w http.ResponseWriter, r *http.Request) {
 
 func getBook(w http.ResponseWriter, r *http.Request) {
 	log.Println("getBook")
+
+	params := mux.Vars(r)
+	idString := params["id"]
+	targetId, err := strconv.Atoi(idString)
+
+	if err != nil {
+		log.Println("Failed to parse idString!", err)
+		return
+	}
+
+	for _, book := range books {
+		if book.ID == targetId {
+			log.Println("The requested book: ", book)
+			json.NewEncoder(w).Encode(&book)
+		}
+	}
 }
 
 func addBook(w http.ResponseWriter, r *http.Request) {
 	log.Println("addBook")
+
+	var book Book
+	json.NewDecoder(r.Body).Decode(&book)
+	books = append(books, book)
+	log.Println("New book: ", book)
+
+	json.NewEncoder(w).Encode(books)
 }
 
 func updateBook(w http.ResponseWriter, r *http.Request) {
