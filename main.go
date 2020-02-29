@@ -83,6 +83,20 @@ func updateBook(w http.ResponseWriter, r *http.Request) {
 
 func removeBook(w http.ResponseWriter, r *http.Request) {
 	log.Println("removeBook")
+
+	params := mux.Vars(r)
+	targetId, err := strconv.Atoi(params["id"])
+	if err != nil {
+		log.Println("Failed to parse id")
+		return
+	}
+
+	for i, book := range books {
+		if book.ID == targetId {
+			books = append(books[:i], books[i+1:]...)
+		}
+	}
+	json.NewEncoder(w).Encode(books)
 }
 
 func createData() []Book {
